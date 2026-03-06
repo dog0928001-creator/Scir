@@ -3,54 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BLOGNOYE - 나의 블로그</title>
+    <title>SCRIPTNOYE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-    <!-- 마크다운을 HTML로 변환해주는 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        .prose img { max-width: 100%; border-radius: 0.75rem; }
-        .post-card { transition: all 0.2s; }
-        .post-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+        /* 긴 단어나 URL이 화면을 뚫고 나가지 않도록 설정 */
+        .break-words-custom {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap; /* 마크다운의 줄바꿈을 존중하면서 자동 줄바꿈 적용 */
+        }
+        
+        /* 본문 스타일 가독성 향상 */
+        #view-content {
+            line-height: 1.8;
+            color: #374151;
+        }
+        #view-content h1, #view-content h2, #view-content h3 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+            color: #111827;
+        }
+        #view-content p {
+            margin-bottom: 1.25rem;
+        }
+        #view-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 1rem;
+            margin: 2rem auto;
+            display: block;
+        }
+        .post-card { transition: all 0.2s ease-in-out; }
+        .post-card:hover { transform: translateY(-3px); border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body class="bg-gray-50 text-gray-900 overflow-x-hidden">
 
-    <!-- 상단 바 -->
-    <nav class="bg-white border-b sticky top-0 z-50">
+    <!-- 상단 네비게이션 -->
+    <nav class="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
             <a href="javascript:showList()" class="text-2xl font-black text-blue-600 tracking-tighter">BLOGNOYE</a>
             <div class="flex items-center gap-4">
-                <a href="/admin/" class="text-sm font-bold px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">글쓰기</a>
+                <a href="/admin/" class="text-sm font-bold px-5 py-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all shadow-sm">글쓰기</a>
             </div>
         </div>
     </nav>
 
     <!-- 목록 섹션 -->
     <section id="list-view" class="max-w-4xl mx-auto px-6 py-12">
-        <h1 class="text-3xl font-bold mb-8">최신 포스트 🖋️</h1>
+        <div class="mb-10">
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">최신 포스트 🖋️</h1>
+            <p class="text-gray-500 mt-2">당신의 이야기를 들려주세요.</p>
+        </div>
+        
         <div id="posts-list" class="grid gap-6">
-            <div id="status-box" class="p-20 text-center border-2 border-dashed rounded-3xl bg-white text-gray-400">
-                콘텐츠를 불러오는 중입니다...
+            <!-- 로딩 상태 -->
+            <div id="status-box" class="p-20 text-center border-2 border-dashed rounded-3xl bg-white text-gray-400 font-medium">
+                게시글을 불러오고 있습니다...
             </div>
         </div>
     </section>
 
-    <!-- 상세 보기 섹션 (기본은 숨김) -->
+    <!-- 상세 보기 섹션 -->
     <section id="post-view" class="max-w-3xl mx-auto px-6 py-12 hidden">
-        <button onclick="showList()" class="mb-8 text-blue-600 font-bold flex items-center gap-2 hover:underline">
-            ← 목록으로 돌아가기
+        <button onclick="showList()" class="mb-10 text-gray-500 font-semibold flex items-center gap-2 hover:text-blue-600 transition-colors group">
+            <span class="group-hover:-translate-x-1 transition-transform">←</span> 목록으로 돌아가기
         </button>
-        <article class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100">
-            <header class="mb-8 pb-8 border-b border-gray-100">
-                <span id="view-date" class="text-blue-500 font-bold text-sm tracking-widest uppercase block mb-2"></span>
-                <h1 id="view-title" class="text-4xl font-extrabold text-gray-900 leading-tight"></h1>
+        
+        <article class="bg-white p-6 md:p-12 rounded-[2.5rem] shadow-sm border border-gray-100">
+            <header class="mb-10 pb-10 border-b border-gray-100">
+                <span id="view-date" class="text-blue-500 font-bold text-xs tracking-widest uppercase block mb-3"></span>
+                <h1 id="view-title" class="text-3xl md:text-5xl font-black text-gray-900 leading-[1.15] break-words-custom"></h1>
             </header>
-            <div id="view-content" class="prose prose-blue max-w-none leading-relaxed text-gray-700">
-                <!-- 마크다운 본문이 들어갈 자리 -->
+            
+            <!-- 본문 영역: 자동 줄바꿈 강제 적용 -->
+            <div id="view-content" class="break-words-custom">
+                <!-- 마크다운 변환 본문 -->
             </div>
         </article>
     </section>
+
+    <footer class="max-w-4xl mx-auto px-6 py-12 text-center text-gray-400 text-sm">
+        &copy; 2026 SCRIPTNOYE. All rights reserved.
+    </footer>
 
     <script>
         const CONFIG = {
@@ -60,14 +98,12 @@
             folder: "content/blog"
         };
 
-        // 1. 목록 화면 보여주기
         function showList() {
             document.getElementById('list-view').classList.remove('hidden');
             document.getElementById('post-view').classList.add('hidden');
-            window.scrollTo(0, 0);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 2. 글 상세 화면 보여주기
         async function showPost(downloadUrl) {
             const listView = document.getElementById('list-view');
             const postView = document.getElementById('post-view');
@@ -75,14 +111,14 @@
             
             listView.classList.add('hidden');
             postView.classList.remove('hidden');
-            contentArea.innerHTML = "본문을 불러오는 중...";
+            contentArea.innerHTML = `<div class="py-20 text-center text-gray-400">내용을 불러오는 중...</div>`;
             window.scrollTo(0, 0);
 
             try {
                 const response = await fetch(downloadUrl);
                 const rawText = await response.text();
                 
-                // Frontmatter 파싱 (--- 사이의 설정값 제거)
+                // Frontmatter 파싱 로직
                 const parts = rawText.split('---');
                 let content = rawText;
                 let title = "제목 없음";
@@ -97,11 +133,13 @@
 
                 document.getElementById('view-title').innerText = title;
                 document.getElementById('view-date').innerText = date;
-                // 마크다운을 HTML로 변환하여 삽입
+                
+                // 마크다운 변환 및 줄바꿈 최적화 옵션 설정
+                marked.setOptions({ gfm: true, breaks: true });
                 contentArea.innerHTML = marked.parse(content);
                 
             } catch (err) {
-                contentArea.innerHTML = "글을 불러오는 데 실패했습니다.";
+                contentArea.innerHTML = `<div class="py-20 text-center text-red-400 font-bold">글을 불러오지 못했습니다. 다시 시도해 주세요.</div>`;
             }
         }
 
@@ -115,10 +153,10 @@
                 if (!response.ok) throw new Error("폴더를 찾을 수 없습니다.");
 
                 const files = await response.json();
-                const mdFiles = files.filter(f => f.name.endsWith('.md')).reverse(); // 최신순
+                const mdFiles = files.filter(f => f.name.endsWith('.md')).reverse();
 
                 if (mdFiles.length === 0) {
-                    statusBox.innerHTML = "작성된 글이 없습니다.";
+                    statusBox.innerHTML = "작성된 포스트가 없습니다. 관리자에서 글을 써보세요!";
                     return;
                 }
 
@@ -127,23 +165,24 @@
                 for (const file of mdFiles) {
                     const rawData = await fetch(file.download_url).then(r => r.text());
                     const titleMatch = rawData.match(/title:\s*["']?(.*?)["']?$/m);
-                    const title = titleMatch ? titleMatch[1] : file.name;
+                    const title = titleMatch ? titleMatch[1] : file.name.replace('.md', '');
                     const dateMatch = rawData.match(/date:\s*(.*?)$/m);
                     const date = dateMatch ? dateMatch[1].split('T')[0] : "날짜 없음";
 
                     const card = document.createElement('div');
-                    card.className = "post-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100 cursor-pointer";
+                    card.className = "post-card bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 cursor-pointer flex flex-col items-start";
                     card.innerHTML = `
-                        <span class="text-xs font-bold text-blue-500 uppercase">${date}</span>
-                        <h2 class="text-xl font-bold mt-1 text-gray-800">${title}</h2>
-                        <div class="mt-4 text-sm font-semibold text-blue-600">내용 읽기 →</div>
+                        <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">${date}</span>
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800 leading-tight mb-4 break-words-custom w-full">${title}</h2>
+                        <div class="text-sm font-bold text-blue-600 flex items-center gap-1 group-hover:gap-2 transition-all">
+                            자세히 보기 <span>→</span>
+                        </div>
                     `;
-                    // 클릭 시 상세 보기 실행
                     card.onclick = () => showPost(file.download_url);
                     listContainer.appendChild(card);
                 }
             } catch (err) {
-                statusBox.innerHTML = "오류: " + err.message;
+                statusBox.innerHTML = `<span class="text-red-400">오류: ${err.message}</span>`;
             }
         }
 
