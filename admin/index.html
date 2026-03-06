@@ -1,14 +1,55 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>관리자 페이지</title>
-    <!-- Netlify Identity 위젯 -->
-    <script src="[https://identity.netlify.com/v1/netlify-identity-widget.js](https://identity.netlify.com/v1/netlify-identity-widget.js)"></script>
-  </head>
-  <body>
-    <!-- Decap CMS 로드 -->
-    <script src="[https://unpkg.com/decap-cms](https://unpkg.com/decap-cms)@^3.0.0/dist/decap-cms.js"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>블로그 관리자 대시보드</title>
+  <!-- Netlify Identity Widget -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+  <!-- Decap CMS 스크립트 (UI를 그려주는 핵심 소스) -->
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+
+  <script>
+    // CMS 설정 (별도의 config.yml 없이 이 안에서 설정 가능)
+    window.CMS_CONFIG = {
+      backend: {
+        name: 'git-gateway',
+        branch: 'main', // 본인의 GitHub 기본 브랜치명이 'master'라면 'master'로 수정하세요.
+      },
+      media_folder: 'images/uploads',
+      public_folder: '/images/uploads',
+      collections: [
+        {
+          name: 'blog',
+          label: '블로그 포스트',
+          folder: 'content/posts', // 글이 저장될 폴더 (미리 생성해두면 좋습니다)
+          create: true,
+          slug: '{{year}}-{{month}}-{{day}}-{{slug}}',
+          fields: [
+            { label: '제목', name: 'title', widget: 'string' },
+            { label: '발행일', name: 'date', widget: 'datetime' },
+            { label: '요약', name: 'summary', widget: 'text' },
+            { label: '본문', name: 'body', widget: 'markdown' },
+          ],
+        },
+      ],
+    };
+  </script>
+
+  <!-- 로그인 후 자동으로 관리자 화면으로 리다이렉트 -->
+  <script>
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", user => {
+        if (!user) {
+          window.netlifyIdentity.on("login", () => {
+            document.location.href = "/admin/";
+          });
+        }
+      });
+    }
+  </script>
+</body>
 </html>
+
