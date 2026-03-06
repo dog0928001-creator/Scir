@@ -1,0 +1,17 @@
+backend:
+  name: git-gateway
+  branch: main # 본인의 기본 브랜치가 main인지 master인지 확인하세요.
+
+media_folder: "assets/images"
+public_folder: "/assets/images"
+
+collections:
+  - name: "blog"
+    label: "블로그 포스트"
+    folder: "content/blog" # 글이 저장될 폴더 경로
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "제목", name: "title", widget: "string"}
+      - {label: "발행일", name: "date", widget: "datetime"}
+      - {label: "본문", name: "body", widget: "markdown"}
