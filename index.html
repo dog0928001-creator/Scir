@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 정적 블로그</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Netlify Identity Widget (로그인용) -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-indigo-600">My Static Blog</h1>
+            <div class="space-x-4">
+                <a href="/" class="hover:text-indigo-600 transition">홈</a>
+                <a href="/admin/" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">관리자 로그인</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="max-w-5xl mx-auto px-4 py-16 text-center">
+        <h2 class="text-4xl font-extrabold mb-4">환영합니다! 👋</h2>
+        <p class="text-xl text-gray-600">Netlify와 Decap CMS로 운영되는 자동 배포 블로그입니다.</p>
+    </header>
+
+    <!-- Blog Posts Container -->
+    <main class="max-w-5xl mx-auto px-4 pb-20">
+        <div id="posts-grid" class="grid md:grid-cols-2 gap-8">
+            <!-- 글 목록이 여기에 동적으로 표시됩니다 (실제 운영시 정적 생성기나 JS로 렌더링) -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border hover:shadow-md transition">
+                <div class="text-sm text-indigo-500 font-semibold mb-2">Notice</div>
+                <h3 class="text-2xl font-bold mb-2">블로그 시작 가이드</h3>
+                <p class="text-gray-600 mb-4">관리자 페이지(/admin)에 접속하여 첫 번째 글을 작성해 보세요. 자동으로 깃허브에 저장되고 배포됩니다.</p>
+                <div class="text-gray-400 text-sm">2024-05-20</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Netlify Identity Logic -->
+    <script>
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on("init", user => {
+                if (!user) {
+                    window.netlifyIdentity.on("login", () => {
+                        document.location.href = "/admin/";
+                    });
+                }
+            });
+        }
+    </script>
+
+    <!-- CMS Configuration (Decap CMS) -->
+    <!-- 실제 서비스 시에는 별도의 /admin/index.html과 config.yml 파일로 분리하는 것이 좋습니다. -->
+    <script type="text/template" id="cms-config">
+        backend:
+          name: git-gateway
+          branch: main
+        media_folder: "assets/uploads"
+        public_folder: "/assets/uploads"
+        collections:
+          - name: "blog"
+            label: "블로그 포스트"
+            folder: "content/blog"
+            create: true
+            slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+            fields:
+              - {label: "제목", name: "title", widget: "string"}
+              - {label: "발행일", name: "date", widget: "datetime"}
+              - {label: "요약", name: "summary", widget: "text"}
+              - {label: "본문", name: "body", widget: "markdown"}
+    </script>
+
+</body>
+</html>
+
