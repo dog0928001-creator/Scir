@@ -3,105 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나의 자동 업데이트 블로그</title>
+    <title>BLOGNOYE - 나의 블로그</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-    <style>
-        .post-card { transition: transform 0.2s; }
-        .post-card:hover { transform: translateY(-5px); }
-    </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
 
-    <nav class="bg-white border-b sticky top-0 z-10">
+    <nav class="bg-white border-b sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="/" class="text-2xl font-black text-indigo-600 tracking-tighter">BLOGNOYE</a>
-            <div class="flex items-center gap-4">
-                <a href="/admin/" class="text-sm font-medium px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full hover:bg-indigo-100 transition">글쓰기</a>
-                <div data-netlify-identity-button></div>
+            <a href="/" class="text-2xl font-black text-blue-600">BLOGNOYE</a>
+            <div class="flex items-center gap-3">
+                <a href="/admin/" class="text-sm font-bold px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">글쓰기</a>
             </div>
         </div>
     </nav>
 
-    <header class="max-w-4xl mx-auto px-6 py-16">
-        <h1 class="text-4xl font-bold mb-4">최신 포스트 📝</h1>
-        <p class="text-gray-500">관리자 페이지에서 작성한 글이 아래에 자동으로 표시됩니다.</p>
-    </header>
-
-    <main class="max-w-4xl mx-auto px-6 pb-24">
-        <div id="posts-list" class="grid gap-8">
-            <!-- 로딩 상태 표시 -->
-            <div id="status-message" class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
-                <p class="text-gray-400">포스트를 불러오는 중입니다...</p>
+    <main class="max-w-4xl mx-auto px-6 py-12">
+        <h1 class="text-3xl font-bold mb-8">최신 포스트 📝</h1>
+        <div id="posts-list" class="space-y-6">
+            <div id="status" class="p-10 text-center border-2 border-dashed rounded-xl bg-white text-gray-500">
+                <p id="status-text">포스트를 불러오는 중입니다...</p>
             </div>
         </div>
     </main>
 
     <script>
-        // 1. 관리자에서 설정한 저장 폴더와 일치해야 합니다.
-        // GitHub API를 통해 해당 폴더의 파일 목록을 가져옵니다.
-        const USERNAME = "dog0928001-creator" // 실제 아이디로 수정 필요 (예: blognoye)
-        const REPO = "Scir";   // 실제 저장소 이름으로 수정 필요
-        const POSTS_DIR = "content/posts";
+        // 스크린샷에 표시된 정확한 정보를 입력합니다.
+        const CONFIG = {
+            username: "dog0928001-creator", // 깃허브 아이디
+            repo: "Scir",                   // 저장소 이름 (스크린샷 기준)
+            branch: "main",                 
+            postsFolder: "content/posts"    
+        };
 
-        async function loadPosts() {
-            const listElement = document.getElementById('posts-list');
-            const statusMessage = document.getElementById('status-message');
+        async function fetchPosts() {
+            const list = document.getElementById('posts-list');
+            const statusText = document.getElementById('status-text');
 
             try {
-                // GitHub Public API를 사용하여 파일 목록 조회
-                // (참고: API 호출 제한이 있으므로 실제 운영 시에는 Hugo나 11ty 같은 SSG 사용을 권장합니다)
-                const response = await fetch(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/${POSTS_DIR}`);
+                // GitHub API를 통해 폴더 내용 확인
+                const apiUrl = `https://api.github.com/repos/${CONFIG.username}/${CONFIG.repo}/contents/${CONFIG.postsFolder}?ref=${CONFIG.branch}`;
+                const response = await fetch(apiUrl);
                 
-                if (!response.ok) throw new Error('파일을 찾을 수 없습니다.');
-                
-                const files = await response.json();
-                const markdownFiles = files.filter(file => file.name.endsWith('.md'));
+                if (!response.ok) {
+                    throw new Error("글이 들어있는 폴더를 찾을 수 없습니다. (먼저 /admin에서 글을 작성해 보세요)");
+                }
 
-                if (markdownFiles.length === 0) {
-                    statusMessage.innerHTML = "<p class='text-gray-500'>아직 작성된 글이 없습니다. 관리자 페이지에서 첫 글을 써보세요!</p>";
+                const files = await response.json();
+                const mdFiles = files.filter(f => f.name.endsWith('.md'));
+
+                if (mdFiles.length === 0) {
+                    statusText.innerText = "아직 작성된 글이 없습니다. 관리자 페이지에서 첫 글을 써보세요!";
                     return;
                 }
 
-                statusMessage.remove(); // 로딩 메시지 제거
+                document.getElementById('status').remove();
 
-                for (const file of markdownFiles) {
-                    // 각 마크다운 파일의 내용을 가져옴
-                    const contentResponse = await fetch(file.download_url);
-                    const text = await contentResponse.text();
-
-                    // 간단한 마크다운 파싱 (제목 추출 등)
-                    const titleMatch = text.match(/^title:\s*(.*)$/m) || text.match(/^#\s*(.*)$/m);
-                    const dateMatch = text.match(/^date:\s*(.*)$/m);
-                    const title = titleMatch ? titleMatch[1].replace(/['"]/g, '') : file.name;
-                    const date = dateMatch ? dateMatch[1].split('T')[0] : '날짜 없음';
-
-                    // 카드 UI 생성
+                for (const file of mdFiles) {
+                    const postData = await fetch(file.download_url).then(res => res.text());
+                    
+                    // 마크다운 Frontmatter에서 제목 추출 (없으면 파일명 사용)
+                    const titleMatch = postData.match(/title:\s*["']?(.*?)["']?$/m);
+                    const title = titleMatch ? titleMatch[1] : file.name.replace('.md', '');
+                    const dateMatch = postData.match(/date:\s*(.*?)$/m);
+                    const date = dateMatch ? dateMatch[1].split('T')[0] : "날짜 미상";
+                    
                     const card = document.createElement('div');
-                    card.className = "post-card bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3";
+                    card.className = "p-6 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer";
                     card.innerHTML = `
-                        <span class="text-xs font-bold text-indigo-500 uppercase tracking-widest">${date}</span>
-                        <h2 class="text-2xl font-bold hover:text-indigo-600 cursor-pointer">${title}</h2>
-                        <p class="text-gray-600 line-clamp-2">클릭하여 자세한 내용을 확인하세요.</p>
-                        <div class="mt-4 pt-4 border-t border-gray-50 flex items-center text-sm font-semibold text-gray-400">
-                            READ MORE →
-                        </div>
+                        <div class="text-blue-500 text-xs font-bold mb-1">${date}</div>
+                        <h2 class="text-xl font-bold">${title}</h2>
+                        <div class="mt-3 text-sm text-gray-400">자세히 보기 →</div>
                     `;
-                    listElement.appendChild(card);
+                    card.onclick = () => window.open(file.html_url, '_blank');
+                    list.appendChild(card);
                 }
-            } catch (error) {
-                statusMessage.innerHTML = `
-                    <p class='text-red-400 font-medium'>글을 불러오는 중에 문제가 발생했습니다.</p>
-                    <p class='text-xs text-gray-400 mt-2'>${error.message}</p>
-                    <p class='mt-4 text-sm text-indigo-600 font-bold'>설정에서 GitHub 아이디와 레포지토리 이름을 확인해주세요!</p>
-                `;
+
+            } catch (err) {
+                statusText.innerHTML = `<span class="text-red-500">${err.message}</span>`;
             }
         }
 
-        // 페이지 로드 시 실행
-        window.addEventListener('DOMContentLoaded', loadPosts);
+        window.onload = fetchPosts;
 
-        // Netlify Identity 위젯 초기화
         if (window.netlifyIdentity) {
             window.netlifyIdentity.on("init", user => {
                 if (!user) {
